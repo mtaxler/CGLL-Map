@@ -1,0 +1,17 @@
+sql_institution = 
+SELECT institution.lat,institution.lng, people.photolink, people.email, people.subject, people.firstname, people.lastname, people.link, people.linkdescription, institution.category, people.institutionname, level, location, name FROM institution LEFT JOIN people on institution.name = people.institutionname UNION SELECT institution.lat,institution.lng, people.photolink, people.email, people.subject, people.firstname, people.lastname, people.link, people.linkdescription, institution.category, people.institutionname, level, location, name FROM institution RIGHT JOIN people on institution.name = people.institutionname
+
+
+sql_stewardship = SELECT lat, lng, name, description, location, photolink FROM stewardship
+
+sql_workshops = SELECT lat, lng, title, description, date, url, location, photolink FROM workshops
+
+var dropdown_sql = SELECT DISTINCT location from institution order by location
+
+SELECT lat,lng, people.photolink, people.email, people.subject, people.firstname, people.lastname, people.link, people.linkdescription , institution.category, people.institutionname, level, location, name FROM institution LEFT OUTER JOIN people on institution.name = people.institutionname WHERE institution.location = '" + place +"'"
+
+UNION
+
+SELECT lat,lng, people.photolink, people.email, people.subject, people.firstname, people.lastname, people.link, people.linkdescription , institution.category, people.institutionname, level, location, name FROM institution RIGHT OUTER JOIN people on institution.name = people.institutionname WHERE institution.location = '" + place +"'"
+
+c34d6d49900606af3e23801e95d402cf178e3786

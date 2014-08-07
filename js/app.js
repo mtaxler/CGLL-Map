@@ -6,12 +6,7 @@ $(document).ready(function(){
 	});
 
 	map = L.map('map').setView([45.403108, -84.672363], 6);
-	var basemap = new L.StamenTileLayer("terrain");
-
-	//basemap.addTo(map);
-
 	var mapquest = new MQ.mapLayer();
-
 	mapquest.addTo(map);
 
 	$(window).on("resize", function() {
@@ -28,16 +23,14 @@ $(document).ready(function(){
 	var workshop_query = 'SELECT DISTINCT location from workshops order by location';
 	createDropdown(account_name, people_query, dropdownTypes[0]);
 	createDropdown(account_name, workshop_query, dropdownTypes[1]);
+	
 	//Icon Set
 	var institutionIcon = L.Icon.extend({
 		options: {
 			//iconSize: [32, 37]
 			iconSize: [25,30]
-
 		}
 	});
-
-
 
 	$('.locationPeople').click(function(){
 		var location = this.innerHTML;
@@ -47,11 +40,7 @@ $(document).ready(function(){
 	$('.locationWorkshops').click(function(){
 		var location = this.innerHTML;
 		workshopsByLocation(account_name, location);
-
-
 	});
-
-
 
 	var schoolIcon = new institutionIcon({iconUrl: 'img/school.png'}),
 	universityIcon = new institutionIcon({iconUrl: 'img/university.png'}),
@@ -60,14 +49,6 @@ $(document).ready(function(){
 	workshopsIcon = new institutionIcon({iconUrl: 'img/workshop.png'});
 
 	//Map Overlays
-	//var markerclusterer = new L.MarkerClusterGroup().addTo(map);
-
-
-	// var schools = new L.MarkerClusterGroup().addTo(map);
-	// var research = new L.featureGroup().addTo(map);
-	// var informal = new L.featureGroup().addTo(map);
-	// var stewardshipLayer = new L.featureGroup().addTo(map);
-	// var workshopLayer = new L.featureGroup().addTo(map);
 
 	var schools = new L.MarkerClusterGroup({
 		iconCreateFunction: function(cluster){
@@ -143,8 +124,7 @@ $(document).ready(function(){
 
 					//###### ADD CHECK FUNCTION TO MAKE SURE GEOMETRY EXISTS BEFORE PASSING DATA TO LATER FUNCTIONS
 					$.each(data.rows, function(index, val) {
-												//Institution Details
-						
+						//Institution Details
 						var category = val.category;
 						var name = val.name;
 						var level = val.level;
@@ -189,28 +169,10 @@ $(document).ready(function(){
 							lng:lng
 						}
 
-						// var institutionInfo;
-						// console.log(index);
-
-						// if (index == 0){
-						// 	institutionList.push(institution);
-							
-						// } else if (index > 0){
-						// 	for (var i = institutionList.length; i >= 0; i--) {
-								
-						// 		if (institutionList[i].name != name){
-						// 			institutionInfo = institution;
-						// 		}
-						// 	};
-						// }
-						//THIS IS WHERE SHIT IS FUCKED UP!!!!!!!!
-
-
 						institutionList.push(institution);
 					});
 					//Function call that passes all the query content to a new function for marker construction
 					createMarkers(institutionList,peopleList);
-
 				}
 			});
 		} else if (type == "stewardship"){
@@ -248,14 +210,11 @@ $(document).ready(function(){
 							lat: lat,
 							lng: lng
 						}
-
 						stewardshipList.push(stewardshipPlace);
-
 					});
 
 					//Function call that passes all the query content to a new function for marker construction
 					createStewardshipMarkers(stewardshipList);
-
 				}
 			});
 
@@ -269,8 +228,6 @@ $(document).ready(function(){
 					if (data == true) {
 						rslt = true;
 					}
-
-
 					var workshopList = [];
 
 					$.each(data.rows, function(index, val) {
@@ -306,7 +263,6 @@ $(document).ready(function(){
 
 					//Function call that passes all the query content to a new function for marker construction
 					createWorkshopMarkers(workshopList);
-
 				}
 			});
 
@@ -316,7 +272,6 @@ $(document).ready(function(){
 
 	function createStewardshipMarkers(stewardship){
 		for (var i = stewardship.length - 1; i >= 0; i--) {
-
 			var point = stewardship[i];
 			var contentPhoto = '<img class="img-thumbnail img-responsive" style="width:300px;" src="' + point.photolink + '">';
 			var contentString = '<h4>Stewardship in Action</h4><div style="margin-left:10px;margin-top:20px;"><h5>' + point.name + '</h5><p>' + point.location + '</p><p>' + point.description + '</p><p>' + contentPhoto + '</p></div>';
@@ -330,7 +285,6 @@ $(document).ready(function(){
 
 				});
 			stewardshipLayer.addLayer(marker);
-
 		};
 	}
 
@@ -338,7 +292,12 @@ $(document).ready(function(){
 		for (var i = workshop.length - 1; i >= 0; i--) {
 
 			var point = workshop[i];
-			var contentPhoto = '<img class="img-thumbnail img-responsive" style="width:300px;" src="' + point.photolink + '">';
+			var contentPhoto;
+			if (point.photolink){
+				contentPhoto = '<img class="img-thumbnail img-responsive" style="width:250px;" src="' + point.photolink + '">';
+			} else {
+				contentPhoto = '';
+			}
 			var contentLink;
 			if (point.url){
 				contentLink = '<p><a href="' + point.url + '" target="_blank">' + point.url + '</p>';
@@ -350,13 +309,11 @@ $(document).ready(function(){
 				.bindPopup(contentString)
 				.bindLabel(point.title)
 				.on('click',function(e){
-					//$('#info').html(e.target._popup._content);
 					$('#modal-body').html(e.target._popup._content);
 					$('#myModal').modal();
 
 				});
 			workshopLayer.addLayer(marker);
-
 		};
 	}
 
@@ -364,21 +321,16 @@ $(document).ready(function(){
 
 		unique(institution);
 		for (var i = institution.length - 1; i >= 0; i--) {
-
-
 			var inst = institution[i];  //Look at institutions one at a time
 			var person = []; //creates a list of people for each institution called 'person'
 
 			for (var j = peopleList.length - 1; j >= 0; j--) {
 
 				if (inst.name == peopleList[j].institutionname){
-
 					person.push(peopleList[j]); //run the institution name against the current institution name 
-
-
 				} else {
 						//console.log('no match');
-					}
+				}
 			}
 
 			//Marker creation differs depending on the institution category
@@ -412,7 +364,6 @@ $(document).ready(function(){
 						$('#myModal').modal();
 
 					});
-
 				schools.addLayer(marker);
 
 			} else if (inst.category == 'RESEARCH INSTITUTION'){

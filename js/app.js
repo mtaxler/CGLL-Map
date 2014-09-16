@@ -46,7 +46,9 @@ $(document).ready(function(){
 	universityIcon = new institutionIcon({iconUrl: 'img/university.png'}),
 	restorationIcon = new institutionIcon({iconUrl: 'img/restoration.png'}),
 	informalIcon = new institutionIcon({iconUrl: 'img/museum_science.png'}),
-	workshopsIcon = new institutionIcon({iconUrl: 'img/workshop.png'});
+	workshopsIcon = new institutionIcon({iconUrl: 'img/workshop.png'}),
+	staffIcon = new institutionIcon({iconUrl: 'img/staff.png'});
+
 
 	//Map Overlays
 
@@ -80,12 +82,19 @@ $(document).ready(function(){
 			return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster marker-cluster-workshop', iconSize: new L.Point(40, 40) });
 			}
 	}).addTo(map);
+	var staff = new L.MarkerClusterGroup({
+		iconCreateFunction: function(cluster){
+			var childCount = cluster.getChildCount();
+			return new L.DivIcon({ html: '<div><span>' + childCount + '</span></div>', className: 'marker-cluster marker-cluster-staff', iconSize: new L.Point(40, 40) });
+			}
+	}).addTo(map);
 
 	var overlays = {
 		"<b>Insitutions and People</b>": {
 			"<img src='img/school.png' width='24' height='28'><span style='color: rgba(225, 55, 65,1)'>&nbsp;Formal Education</span>": schools,
 			"<img src='img/university.png' width='24' height='28'><span style='color: rgba(121, 158, 210, 1)'>&nbsp;Research</span>": research,
-			"<img src='img/museum_science.png' width='24' height='28'><span style='color: rgba(104, 217, 90, 1)'>&nbsp;Informal Education</span>": informal
+			"<img src='img/museum_science.png' width='24' height='28'><span style='color: rgba(104, 217, 90, 1)'>&nbsp;Informal Education</span>": informal,
+			"<img src='img/staff.png' width='24' height='28'><span style='color: rgba(164, 54, 94, 1)'>&nbsp;CGLL Staff</span>": staff
 		},
 		"<b>Stewardship and Workshops</b>": {
 			"<img src='img/restoration.png' width='24' height='28'><span style='color: rgba(23, 126, 61, 1)'>&nbsp;Stewardship/Monitoring</span>": stewardshipLayer,
@@ -106,9 +115,11 @@ $(document).ready(function(){
 		var sql_institution = "SELECT ST_AsGeoJSON(institution.the_geom) as geom, people.photolink, people.email, people.subject, people.firstname, people.lastname, people.link, people.linkdescription, institution.category, people.institutionname, level, location, name FROM institution FULL OUTER JOIN people on institution.name = people.institutionname";
 		var sql_stewardship = "SELECT ST_AsGeoJSON(stewardship.the_geom) as geom, name, description, location, photolink FROM stewardship";
 		var sql_workshops = "SELECT ST_AsGeoJSON(workshops.the_geom) as geom, title, description, date, url, location, photolink FROM workshops";
+		var sql_staff = "SELECT ST_AsGeoJSON(staff.the_geom) as geom, firstname, lastname, email, link, linkdescription, photolink, subject, institutionname FROM staff";
 		runSQL(sql_institution, account, "institution");
 		runSQL(sql_stewardship, account, "stewardship");
 		runSQL(sql_workshops, account, "workshops");
+		runSQL(sql_staff, account, "staff");
 	}
 
 	function runSQL(sql_input, account_input, type){  //Constructs AJAX query (synchronous) passing account name and a specified sql function
@@ -266,6 +277,56 @@ $(document).ready(function(){
 				}
 			});
 
+		} else if (type = "staff"){
+			$.ajax({
+				async: false,
+				url: 'http://' + account_input + '.cartodb.com/api/v2/sql/?q=' + sql_input,
+				dataType: "json",
+				success: function(data) {
+					if (data == true) {
+						rslt = true;
+					}
+					var staffList = [];
+
+					$.each(data.rows, function(index, val) {
+						
+						//Stewardship Location Details
+						var email = val.email;
+						var firstname = val.firstname;
+						var institutionname = val.institutionname;
+						var lastname = val.lastname;
+						var link = val.link;
+						var linkdescription = val.linkdescription;
+						var photolink = val.photolink;
+						var subject = val.subject;
+
+						//Geometry Creation
+						var geom = JSON.parse(val.geom);
+						var lat = geom.coordinates[1];
+						var lng = geom.coordinates[0];
+
+						//Object with all queried places
+						var staffMember = {
+							email: email,
+							firstname: firstname,
+							lastname: lastname,
+							link: link,
+							linkdescription: linkdescription,
+							photolink: photolink,
+							subject: subject,
+							lat: lat,
+							lng: lng
+						}
+
+						staffList.push(staffMember);
+
+					});
+
+					//Function call that passes all the query content to a new function for marker construction
+					createStaffMarkers(staffList);
+				}
+			});
+
 		}
 
 	}
@@ -314,6 +375,41 @@ $(document).ready(function(){
 
 				});
 			workshopLayer.addLayer(marker);
+		};
+	}
+
+	function createStaffMarkers(staffMembers){
+		for (var i = staffMembers.length - 1; i >= 0; i--) {
+
+
+
+			var point = staffMembers[i];
+			console.log(point);
+			var contentPhoto;
+
+			if (point.photolink){
+				contentPhoto = '<img class="img-thumbnail img-responsive" style="width:100px; float: right; margin-bottom: 20px;" src="' + point.photolink + '">';
+			} else {
+				contentPhoto = '';
+			}
+			var contentLink;
+			if (point.link){
+				contentLink = '<p><a href="' + point.link + '" target="_blank">' + point.link + "</a>" + " - " + point.linkdescription + '</p>';
+			} else {
+				contentLink = '';
+			}
+
+			
+			var contentString = '<h4>CGLL Staff Member</h4><div style="margin-left:10px;margin-top:20px;">' + contentPhoto + '<h5>' + point.firstname + " " + point.lastname + '</h5><p>' + point.subject + '</p><p>' + point.email + '</p><p>' + contentLink + '</p></div>';
+			var marker = new L.marker([point.lat, point.lng],{icon:staffIcon})
+				.bindPopup(contentString)
+				.bindLabel(point.firstname + " " + point.lastname)
+				.on('click',function(e){
+					$('#modal-body').html(e.target._popup._content);
+					$('#myModal').modal();
+
+				});
+			staff.addLayer(marker);
 		};
 	}
 

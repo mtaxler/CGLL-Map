@@ -91,9 +91,9 @@ $(document).ready(function(){
 
 	var overlays = {
 		"<b>Insitutions and People</b>": {
-			"<img src='img/school.png' width='24' height='28'><span style='color: rgba(225, 55, 65,1)'>&nbsp;Formal Education</span>": schools,
+			"<img src='img/school.png' width='24' height='28'><span style='color: rgba(225, 55, 65,1)'>&nbsp;Education</span>": schools,
 			"<img src='img/university.png' width='24' height='28'><span style='color: rgba(121, 158, 210, 1)'>&nbsp;Research</span>": research,
-			"<img src='img/museum_science.png' width='24' height='28'><span style='color: rgba(104, 217, 90, 1)'>&nbsp;Informal Education</span>": informal,
+			"<img src='img/museum_science.png' width='24' height='28'><span style='color: rgba(104, 217, 90, 1)'>&nbsp;CGLL Partners</span>": informal,
 			"<img src='img/staff.png' width='24' height='28'><span style='color: rgba(164, 54, 94, 1)'>&nbsp;CGLL Staff</span>": staff
 		},
 		"<b>Stewardship and Workshops</b>": {
@@ -115,7 +115,7 @@ $(document).ready(function(){
 		var sql_institution = "SELECT ST_AsGeoJSON(institution.the_geom) as geom, people.photolink, people.email, people.subject, people.firstname, people.lastname, people.link, people.linkdescription, institution.category, people.institutionname, level, location, name FROM institution FULL OUTER JOIN people on institution.name = people.institutionname";
 		var sql_stewardship = "SELECT ST_AsGeoJSON(stewardship.the_geom) as geom, name, description, location, photolink FROM stewardship";
 		var sql_workshops = "SELECT ST_AsGeoJSON(workshops.the_geom) as geom, title, description, date, url, location, photolink FROM workshops";
-		var sql_staff = "SELECT ST_AsGeoJSON(staff.the_geom) as geom, firstname, lastname, email, link, linkdescription, photolink, subject, institutionname FROM staff";
+		var sql_staff = "SELECT ST_AsGeoJSON(staff.the_geom) as geom, firstname, lastname, email, link, linkdescription, photolink, role, phonenumber, institutionname FROM staff";
 		runSQL(sql_institution, account, "institution");
 		runSQL(sql_stewardship, account, "stewardship");
 		runSQL(sql_workshops, account, "workshops");
@@ -298,7 +298,8 @@ $(document).ready(function(){
 						var link = val.link;
 						var linkdescription = val.linkdescription;
 						var photolink = val.photolink;
-						var subject = val.subject;
+						var role = val.role;
+						var phonenumber = val.phonenumber;
 
 						//Geometry Creation
 						var geom = JSON.parse(val.geom);
@@ -313,7 +314,8 @@ $(document).ready(function(){
 							link: link,
 							linkdescription: linkdescription,
 							photolink: photolink,
-							subject: subject,
+							role: role,
+							phonenumber: phonenumber,
 							lat: lat,
 							lng: lng
 						}
@@ -384,7 +386,7 @@ $(document).ready(function(){
 
 
 			var point = staffMembers[i];
-			console.log(point);
+			
 			var contentPhoto;
 
 			if (point.photolink){
@@ -392,6 +394,8 @@ $(document).ready(function(){
 			} else {
 				contentPhoto = '';
 			}
+			var role = '<p>Role in CGLL: ' + point.role + '</p>';
+
 			var contentLink;
 			if (point.link){
 				contentLink = '<p><a href="' + point.link + '" target="_blank">' + point.link + "</a>" + " - " + point.linkdescription + '</p>';
@@ -400,7 +404,7 @@ $(document).ready(function(){
 			}
 
 			
-			var contentString = '<h4>CGLL Staff Member</h4><div style="margin-left:10px;margin-top:20px;">' + contentPhoto + '<h5>' + point.firstname + " " + point.lastname + '</h5><p>' + point.subject + '</p><p>' + point.email + '</p><p>' + contentLink + '</p></div>';
+			var contentString = '<h4>CGLL Staff Member</h4><div style="margin-left:10px;margin-top:20px;">' + contentPhoto + '<h5>' + point.firstname + " " + point.lastname + '</h5><p>' + point.email + '</p><p>' + point.phonenumber + '</p>' + role + '<p>' + contentLink + '</p></div>';
 			var marker = new L.marker([point.lat, point.lng],{icon:staffIcon})
 				.bindPopup(contentString)
 				.bindLabel(point.firstname + " " + point.lastname)
@@ -475,7 +479,8 @@ $(document).ready(function(){
 				research.addLayer(marker);
 
 			} else if (inst.category == 'INFORMAL RESEARCH'){
-				var contentString = '<h4><span class="text-muted"><img src="img/museum_science.png">Informal Research Institution:</span> ' + inst.name + '</h4>' + '<div class="row" style="margin-left:10px;padding-top:10px"><p>Location: ' + inst.location + '</p></div><div class="peopleIndent"><h4>Contact(s):</h4>' + peopleIterate(person) + '</div>';
+
+				var contentString = '<h4><span class="text-muted"><img src="img/museum_science.png">CGLL Partner Institution:</span> ' + inst.name + '</h4>' + '<div class="row" style="margin-left:10px;padding-top:10px"><p>Location: ' + inst.location + '</p></div><div class="peopleIndent"><h4>Contact(s):</h4>' + peopleIterate(person) + '</div>';
 				var marker = new L.marker([inst.lat, inst.lng],{icon:informalIcon})
 				.bindPopup(contentString)
 				.bindLabel(inst.name)
@@ -511,6 +516,12 @@ function peopleIterate(person){
 			} else {
 				contentPhoto = '';
 			}
+			var contentEmail;
+			if (personA.email){
+				contentEmail = '<p><a href="mailto:' + personA.email + '">' + personA.email + '</a></p>';
+			} else {
+				contentEmail = '';
+			}
 
 			var contentLink;
 			if (personA.link){
@@ -524,7 +535,7 @@ function peopleIterate(person){
 			} else {
 				contentLink = '';
 			}
-			string += '<div class="row" style="margin-left:10px;padding-top:10px;margin-right:15px;"><div class="col-md-9 col-xs-12"><p class="text-info"><strong>' + personA.firstname + ' ' + personA.lastname + '</strong>' + contentSubject + '<p><a href="mailto:' + personA.email + '">' + personA.email + '</a></p>' + contentLink + '</div><div class="col-md-3 hidden-xs">' + contentPhoto + '</div></div>';
+			string += '<div class="row" style="margin-left:10px;padding-top:10px;margin-right:15px;"><div class="col-md-9 col-xs-12"><p class="text-info"><strong>' + personA.firstname + ' ' + personA.lastname + '</strong>' + contentSubject + contentLink + '</div><div class="col-md-3 hidden-xs">' + contentPhoto + '</div></div>';
 
 		};
 		return string;

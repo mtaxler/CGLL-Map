@@ -146,6 +146,13 @@ function locationModal(institution, peopleList){
 					} else {
 						contentPhoto = '';
 					}
+
+					var contentEmail;
+					if (personA.email){
+						contentEmail = '<p><a href="mailto:' + personA.email + '">' + personA.email + '</a></p>';
+					} else {
+						contentEmail = '';
+					}
 					
 					var contentLink;
 					if (personA.link){
@@ -160,7 +167,7 @@ function locationModal(institution, peopleList){
 						contentLink = '';
 					}
 
-					string += '<div class="row" style="margin-left:10px;padding-top:10px;margin-right:15px;"><div class="col-md-9 col-xs-12"><p class="text-info"><strong>' + personA.firstname + ' ' + personA.lastname + '</strong>' + contentSubject + '<p><a href="mailto:' + personA.email + '">' + personA.email + '</a></p>' + contentLink + '</div><div class="col-md-3 hidden-xs">' + contentPhoto + '</div></div>';
+					string += '<div class="row" style="margin-left:10px;padding-top:10px;margin-right:15px;"><div class="col-md-9 col-xs-12"><p class="text-info"><strong>' + personA.firstname + ' ' + personA.lastname + '</strong>' + contentSubject + contentEmail + contentLink + '</div><div class="col-md-3 hidden-xs">' + contentPhoto + '</div></div>';
 					
 				};
 				return string;
@@ -201,7 +208,7 @@ function locationModal(institution, peopleList){
 		
 
 		} else if (inst.category == 'INFORMAL RESEARCH'){
-			content = '<h4><span class="text-muted"><img src="img/museum_science.png">Informal Research Institution:</span> ' + inst.name + '</h4>' + '<div class="row" style="margin-left:10px;padding-top:10px"><p>Location: ' + inst.location + '</p></div><div class="peopleIndent"><h4>Contact(s):</h4>' + peopleIterate(person) + '</div>';
+			content = '<h4><span class="text-muted"><img src="img/museum_science.png">CGLL Partner Institution:</span> ' + inst.name + '</h4>' + '<div class="row" style="margin-left:10px;padding-top:10px"><p>Location: ' + inst.location + '</p></div><div class="peopleIndent"><h4>Contact(s):</h4>' + peopleIterate(person) + '</div>';
 			contentString += content;
 			locationList.push([inst.lat,inst.lng]);
 			
